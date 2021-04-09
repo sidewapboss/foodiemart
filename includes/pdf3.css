@@ -1,0 +1,23 @@
+.certificate{
+	height: 750px;
+	width: 1040px;
+	background: url('../users/cert/university.jpg') no-repeat center;
+}
+.graduant{
+    padding-top: 220px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 24px;
+    font-style: italic;
+}
+.date{
+	position: relative;
+    padding-top: 365px;
+    padding-left: 720px;
+    font-weight: bold;
+}
+.identity{
+	position: relative;
+	padding-left: 50px;
+	font-size: 12px;
+}
