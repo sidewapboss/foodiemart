@@ -66,13 +66,13 @@ class MySQLiDatabase{
 		}
 	}
 	public function dlink(){
-		return "https://www.smurfvillage.net";
+		return "https://localhost/foodiemart";
 	}
 	public function attachmentLink(){
-		return $this->dlink()."/backend";
+		return $this->dlink()."/admin";
 	}
 	public function elink(){
-		return "smurfvillage.net";
+		return "foodiemart.biz";
 	}
 	public function cur($var){
 		
@@ -311,9 +311,17 @@ class MySQLiDatabase{
 		$query = $this->query("SELECT * FROM admins WHERE email=\"$username\" && password =\"$pwd\"");
 		if($this->num_rows($query)>0){
 			$row = $this->fetch_array($query);
+			$_SESSION['adminID'] = $row['id'];
+			$response['status'] = 1;
+			$response['message'] = "Login successful, hold while we load your back office.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
 		}else{
-			$_SESSION['msg'] = "<div class=\"alert alert-warning\">Login failed, please check credentials and try again.</div>";
-			header("location: login");
+			$response['status'] = 0;
+			$response['message'] = "Login failed, please check credentials and try again.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
 			exit;
 		}
 	}
@@ -376,6 +384,30 @@ class MySQLiDatabase{
 			exit;
 		}
 	}
+	public function forgotPasswordAdmin($email){
+		$query = $this->query("SELECT * FROM admins WHERE email=\"$email\"");
+		if($this->num_rows($query)>0){
+			$row = $this->fetch_array($query);
+			$name = $row['name'];
+			$hash = md5(sha1(time()));
+			$body = "Hello $name,<br><br>Password reset was requested for the account associated with this email.<br><br>If this is you, please follow the link below to complete your password reset:";
+			$body .= "<div style='padding:15px;font-weight:bold;'><a href='".$this->dlink()."/admin/mint?hash=$hash&action=minipass&email=$email'>Reset Password</a></div><br><br>";
+			$body .= "If this was not you, you can ignore this message.<br><br><strong>~".$this->appName()."</strong><br><br>";
+			$this->SVFXMailRobotv1("Password Reset", $email, $name, $body);
+			$this->query("UPDATE admins SET hash=\"$hash\" WHERE email=\"$email\"");
+			$response['status'] = 1;
+			$response['message'] = "Password reset mail sent. Follow the link sent to your mail to reset your password.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}else{
+			$response['status'] = 0;
+			$response['message'] = "Email not found!";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+	}
 	public function miniPass($hash, $email){
 		$query = $this->query("SELECT * FROM login WHERE email=\"$email\" && hash=\"$hash\"");
 		if($this->num_rows($query)>0){
@@ -411,6 +443,10 @@ class MySQLiDatabase{
 	}
 	public function profile($id){
 		$query = $this->query("SELECT * FROM login WHERE id=\"$id\"");
+		return $this->fetch_array($query);
+	}
+	public function admin($id){
+		$query = $this->query("SELECT * FROM admins WHERE id=\"$id\"");
 		return $this->fetch_array($query);
 	}
 	public function admins(){

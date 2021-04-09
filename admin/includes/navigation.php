@@ -2,7 +2,7 @@
     <div class="wrapper green"> 
             <?php $user = $db->admin($_SESSION['adminID']);?>
         <div class="header">
-            <a class="logo" href="<?php echo $db->dlink();?>/admin/dashboard" style="font-size: 24px;color: #FFF;padding-left: 10px;"><?php echo $db->appName();?></a>
+            <a class="logo" href="<?php echo $db->dlink();?>/admin/dashboard" style="font-size: 24px;color: #FFF;padding-left: 10px;"><img src="<?php echo $db->attachmentLink();?>/img/logo_white.png" style="height: 30px;" /></a>
             <ul class="header_menu">
                 <li class="list_icon"><a href="#">&nbsp;</a></li>
             </ul>   
@@ -35,13 +35,13 @@
                 </li>
                 <li class="openable <?php if($cur=="orders" || $cur == "pending" || $cur == "shipped" || $cur == "failed"){?>active<?php }?>">
                     <a href="#">
-                        <span class="isw-folder"></span><span class="text">Product Management</span>
+                        <span class="isw-folder"></span><span class="text">Order Management</span>
                     </a>
                     <ul>
-                        <li class="<?php if($cur=="orders"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/new-product"><span class="glyphicon glyphicon-edit"></span><span class="text">New Product</span></a></li>
-                        <li class="<?php if($cur=="pending"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/products"><span class="glyphicon glyphicon-edit"></span><span class="text">Products</span></a></li>
-                        <li class="<?php if($cur=="shipped"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/in-stock"><span class="glyphicon glyphicon-edit"></span><span class="text">In Stock</span></a></li>
-                        <li class="<?php if($cur=="failed"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/out-stock"><span class="glyphicon glyphicon-edit"></span><span class="text">Out Of Stock</span></a></li>
+                        <li class="<?php if($cur=="orders"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/orders"><span class="glyphicon glyphicon-edit"></span><span class="text">Orders</span></a></li>
+                        <li class="<?php if($cur=="pending"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/pending"><span class="glyphicon glyphicon-edit"></span><span class="text">Pending</span></a></li>
+                        <li class="<?php if($cur=="shipped"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/shipped"><span class="glyphicon glyphicon-edit"></span><span class="text">Shipped</span></a></li>
+                        <li class="<?php if($cur=="failed"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/failed"><span class="glyphicon glyphicon-edit"></span><span class="text">Failed</span></a></li>
                     </ul>
                 </li>
                 <li class="openable <?php if($cur=="settings"){?>active<?php }?>">

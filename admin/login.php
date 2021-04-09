@@ -45,13 +45,13 @@
         <h1>Forgot your password?</h1>
         <div class="dr"><span></span></div>
         <div class="loginForm">
-        <?php $db->notification();?>
-            <form class="form-horizontal" action="mint?action=requestPassword" method="post">
+        <div class="passwordNotification"></div>
+            <form class="passwordNow form-horizontal" action="" method="post">
                 <p>This form help you return your password. Please, enter your email, and send request</p>
                 <div class="form-group">
                     <div class="input-group">
                         <span class="input-group-addon"><span class="glyphicon glyphicon-envelope"></span></span>
-                        <input type="email" name="email" placeholder="Your email" class="form-control"/>
+                        <input type="email" name="email" placeholder="Your email" class="passwordEmail form-control"/>
                     </div>                
                 </div>                
                 <div class="row">
@@ -65,7 +65,7 @@
             <div class="controls">
                 <div class="row">                    
                     <div class="col-md-12">
-                        <button class="btn btn-link" onClick="loginBlock('#login');">&laquo; Back</button>
+                        <button class="btn btn-link" onClick="loginBlock('#login');">&laquo; Back to login</button>
                     </div>
                 </div>
             </div>

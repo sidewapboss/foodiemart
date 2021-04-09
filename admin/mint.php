@@ -1,13 +1,12 @@
 <?php
 include("../includes/database.php");
 $action = $db->getVar("action");
-if($action == "register"){$db->register($db->getVar("username"), $db->getVar("firstname"), $db->getVar("lastname"), $db->getVar("email"), $db->getVar("phonenumber"), $db->getVar("password"), $db->getVar("country"), $db->getVar("city"), $db->getVar("telegram"));}
-if($action == "login"){$db->login($db->getVar("email"), $db->getVar("password"), $db->getVar("tick"));}
+if($action == "login"){$db->loginAdmin($db->getVar("email"), $db->getVar("password"));}
 if($action == "updatePassword"){$db->updatePassword($db->getVar("password"));}
 if($action == "updateUser"){$db->updateUser($db->getVar("firstname"), $db->getVar("lastname"), $db->getVar("phone"), $db->getVar("country"), $db->getVar("city"), $db->getVar("telegram"));}
 if($action == "logout"){$db->userLogout();}
 if($action == "minipass"){$db->miniPass($db->getVar("hash"), $db->getVar("email"));}
-if($action == "requestPassword"){$db->forgotPassword($db->getVar("email"));}
+if($action == "requestPassword"){$db->forgotPasswordAdmin($db->getVar("email"));}
 if($action == "approveRegistration"){$db->approveRegistration($db->getVar("hash"), $db->getVar("email"));}
 if($action == "doMail"){$db->doMail();}
 if($action == "theft"){$db->postTheft($db->getVar("comment"), $db->getVar("vid"));}
