@@ -7,8 +7,6 @@ set_time_limit(0);
 require_once('PHPMailerAutoload.php');
 require_once('sirv.api.class.php');
 require_once('PerfectMoney.php');
-//require("vendor/autoload.php");
-use Vimeo\Vimeo;
 class MySQLiDatabase{
 	public $link;
 	public $lastquery; 
@@ -31,7 +29,7 @@ class MySQLiDatabase{
 	   return preg_replace('/-+/', '-', $string); // Replaces multiple hyphens with single one.
 	}
 	public function appName(){
-		return "Smurf Village FX";
+		return "Foodie Mart Shop";
 	}
 	public function query($sql){
 		$this->lastquery = $sql;
@@ -316,6 +314,12 @@ class MySQLiDatabase{
 		}else{
 			$_SESSION['msg'] = "<div class=\"alert alert-warning\">Login failed, please check credentials and try again.</div>";
 			header("location: login");
+			exit;
+		}
+	}
+	public function isLoggedAdmin(){
+		if(!isset($_SESSION['adminID'])){
+			header('location: login');
 			exit;
 		}
 	}
