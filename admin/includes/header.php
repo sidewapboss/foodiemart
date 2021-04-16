@@ -1,5 +1,5 @@
 <?php include("../includes/database.php");
-$url = $_SERVER['REQUEST_URI'];$urls = str_replace("admin/","",$url);
+$url = $_SERVER['REQUEST_URI'];$urls = str_replace("foodiemart/admin/","",$url);
 $cur = trim(parse_url($urls, PHP_URL_PATH), '/');
 if($cur == "minipass"){
     if(!isset($_SESSION['adminID'])){

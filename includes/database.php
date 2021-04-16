@@ -5,8 +5,6 @@ ini_set("max_execution_time", "800");
 error_reporting(error_reporting() & ~E_NOTICE);
 set_time_limit(0);
 require_once('PHPMailerAutoload.php');
-require_once('sirv.api.class.php');
-require_once('PerfectMoney.php');
 class MySQLiDatabase{
 	public $link;
 	public $lastquery; 
@@ -87,8 +85,10 @@ class MySQLiDatabase{
 	public function checkEmail($email, $table, $location){
 		$query = $this->query("SELECT * FROM {$table} WHERE email=\"$email\"");
 		if($this->num_rows($query)>0){
-			$_SESSION['msg'] = "<div class=\"alert alert-warning\">Email Exists!</div>";
-			header("location: $location");
+			$response['status'] = 1;
+			$response['message'] = "Email exists!";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
 			exit;
 		}
 	}
@@ -253,38 +253,104 @@ class MySQLiDatabase{
 		}
 		 return $pagination;
 	}
+	public function pagingx($pages, $page, $per_page, $dlink, $tbname){
+		$url = $dlink."/".$pages."&page";
+		$query = "SELECT COUNT(*) as `num` FROM {$tbname}";
+		$row = $this->fetch_array($this->query($query));
+		$total = $row['num'];
+		$adjacents = "2"; 
+
+		$page = ($page == 0 ? 1 : $page);  
+		$start = ($page - 1) * $per_page;								
+		
+		$prev = $page - 1;							
+		$next = $page + 1;
+		$lastpage = ceil($total/$per_page);
+		$lpm1 = $lastpage - 1;
+		if($page > 1){
+		$pagination = "<li><a href='".$url."=$prev'><i class=\"fa fa-angle-double-left\" aria-hidden=\"true\"></i> Previous</a></li>";
+		}
+		if($lastpage > 1){	
+			$pagination .= "";
+					$pagination .= "";
+			if ($lastpage < 7 + ($adjacents * 2)){	
+				for ($counter = 1; $counter <= $lastpage; $counter++){
+					if ($counter == $page){
+						$pagination.= "<li class=\"active\"><a href=\"#\">$counter</a></li>";
+					}else{
+						$pagination.= "<li><a href='".$url."=$counter'>$counter</a></li>";					
+					}
+				}
+			}elseif($lastpage > 5 + ($adjacents * 2)){
+				if($page < 1 + ($adjacents * 2)){
+					for ($counter = 1; $counter < 4 + ($adjacents * 2); $counter++){
+						if ($counter == $page){
+							$pagination.= "<li class=\"disabled\"><a href=\"#\">$counter</a></li>";
+						}else{
+							$pagination.= "<li><a href='".$url."=$counter'>$counter</a></li>";					
+						}
+					}
+					$pagination.= "<li class=\"disabled\"><a href=\"#\">...</a></li>";
+					$pagination.= "<li><a href='".$url."=$lpm1'>$lpm1</a></li>";
+					$pagination.= "<li><a href='".$url."=$lastpage'>$lastpage</a></li>";		
+				}elseif($lastpage - ($adjacents * 2) > $page && $page > ($adjacents * 2)){
+					$pagination.= "<li><a href='".$url."=1'>1</a></li>";
+					$pagination.= "<li><a href='".$url."=2'>2</a></li>";
+					$pagination.= "<li><a href='#'>...</a></li>";
+					for ($counter = $page - $adjacents; $counter <= $page + $adjacents; $counter++){
+						if ($counter == $page){
+							$pagination.= "<li class=\"active\"><a>$counter</a></li>";
+						}else{
+						 	$pagination.= "<li><a href='".$url."=$counter'>$counter</a></li>";
+						}
+					}
+					$pagination.= "<li><a>...</a></li>";
+					$pagination.= "<li><a href='".$url."=$lpm1'>$lpm1</a></li>";
+					$pagination.= "<li><a href='".$url."=$lastpage'>$lastpage</a></li>";		
+				}else{
+					$pagination.= "<li><a href='".$url."=1'>1</a></li>";
+					$pagination.= "<li><a href='".$url."=2'>2</a></li>";
+					$pagination.= "<li><a>...</a></li>";
+					for ($counter = $lastpage - (2 + ($adjacents * 2)); $counter <= $lastpage; $counter++){
+						if ($counter == $page){
+							$pagination.= "<li class='active'><a class='current'>$counter</a></li>";
+						}else{
+							$pagination.= "<li><a href='".$url."=$counter'>$counter</a></li>";					
+						}
+					}
+				}
+			}
+			
+			if ($page < $counter - 1){
+				$pagination.= "<li><a href='".$url."=$next'>Next</a></li>";
+				$pagination.= "<li><a href='".$url."=$lastpage'>Last</a></li>";
+			}else{
+				$pagination.= "<li class='active'><a class='current'>Next</a></li>";
+				$pagination.= "<li class='active'><a class='current'>Last</a></li>";
+			}
+			$pagination.= "\n";		
+		}
+		 return $pagination;
+	}
 
 	/*	#################################################	ADMIN 	##################################	*/
 	public function newAdmin($name, $email, $password, $type){
 		$pwd = sha1($password);
 		$reg = date("d D M Y h:iA");
-		$this->checkEmail($email, "login", "register");
-		$this->checkUsername($username, "login", "register");
-		$this->checkPhone($phone, "login", "register");
-		$ref = $_SESSION['ref'];
-		$memberID = $this->uniqueKey();
-		$name = $lastname." ".$firstname;
+		$this->checkEmail($email, "admins", "register");
 		$hash = sha1(time());
-		$query = $this->query("INSERT INTO login(username, firstname, lastname, email, phone, password, country, city, reg, memberID, ref, hash, telegram)VALUES(\"$username\", \"$firstname\", \"$lastname\", \"$email\", \"$phone\", \"$password\", \"$country\", \"$city\", \"$reg\", \"$memberID\", \"$ref\", \"$hash\", \"$telegram\")");
+		$query = $this->query("INSERT INTO admins(name, email, password, registered, type, hash)VALUES(\"$name\", \"$email\", \"$pwd\", \"$reg\", \"$type\", \"$hash\")");
 		if($query){
-			$owner = $this->last_id();
-			$today = date("Y-m-d");
-			$exp = date('Y-m-d', strtotime("-1 day", strtotime($today)));
-			$this->query("INSERT INTO subscription(owner, beginners, mastery, university, svultra, rectangle, rhombus, indicators, svfxscanner, vscanner, brainhub)VALUES(\"$owner\", \"$exp\", \"$exp\", \"$exp\", \"$exp\", \"$exp\", \"$exp\", \"$exp\", \"$exp\", \"$exp\", \"$exp\")");
-			$body = "Hello $name,<br><br>";
-			$body .= "We appreciate you registring with us!<br><br>To continue the process, please click on the button below to complete your registration";
-			$body .= "<div style=\"text-align:center;padding:10px;\"><a href=\"".$this->dlink()."/users/mint?action=approveRegistration&hash=$hash&email=$email\"><button style=\"background: green;color:#FFF;padding:10px;font-weight:bold;\">Complete Registration</button></a><br><br></strong>~Smurf Village FX<strong></div>";
-			$this->SVFXMailRobotv1("SVFX: Complete Registration", $email, $name, $body);
-			$_SESSION['msg'] = "<div class=\"alert alert-success\">Registration successful! Please activate your account over email.</div>";
-			$dates = date("d D M Y h:iA");
-			$this->query("INSERT INTO terms(email, date)VALUES(\"$email\", \"$dates\")");
-			unset($_SESSION['ref']);
-			header("location: login");
+			$response['status'] = 1;
+			$response['message'] = "Account created successfully.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
 			exit;
 		}else{
-			$_SESSION['msg'] = "<div class=\"alert alert-warning\">Registration failed!</div>";
-			unset($_SESSION['ref']);
-			header("location: register");
+			$response['status'] = 0;
+			$response['message'] = "Unable to create account at this time, please try again later.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
 			exit;
 		}
 	}
@@ -450,26 +516,341 @@ class MySQLiDatabase{
 		return $this->fetch_array($query);
 	}
 	public function admins(){
-		$query = $this->query("SELECT * FROM login WHERE pmz>0");
+		$query = $this->query("SELECT * FROM admins");
 		while($row = $this->fetch_array($query)){
 			$data[] = $row;
 		}
 		return $data;
 	}
-	public function demoteAdmin($id){
-		$query = $this->query("UPDATE login SET pmz=0 WHERE id=\"$id\"");
-		if($this->affected_rows($query)>0){
-		    $date = date("d D M Y h:iA");
-		    $adm = $_SESSION['adminID'];
-		    $admz = $this->profile($adm);
-			$actionz = "Demoted from moderator by ".$admz['username']." on ".$date;
-			$this->userLog($owner, $actionz);
-			$_SESSION['msg'] = "<div class=\"alert alert-success\">Account demoted successfully!</div>";
-			header("location: admins");
+	public function restrictAdmin($id){
+		$query = $this->query("UPDATE admins SET status=1 WHERE id=\"$id\"");
+		if($query){
+			$response['status'] = 1;
+			$response['message'] = "Account restricted.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
 			exit;
 		}else{
-			$_SESSION['msg'] = "<div class=\"alert alert-warning\">Operation failed!</div>";
-			header("location: admins");
+			$response['status'] = 0;
+			$response['message'] = "Operation failed.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+	}
+	public function releaseAdmin($id){
+		$query = $this->query("UPDATE admins SET status=0 WHERE id=\"$id\"");
+		if($query){
+			$response['status'] = 1;
+			$response['message'] = "Account restored.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}else{
+			$response['status'] = 0;
+			$response['message'] = "Operation failed.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+	}
+	public function updateAdmin($name, $password, $id){
+		if(!empty($password)){
+			$pwd = sha1($password);
+			$this->query("UPDATE admins SET password=\"$pwd\" WHERE id=\"$id\"");
+			$msg = " and password";
+		}
+		$query = $this->query("UPDATE admins SET name=\"$name\" WHERE id=\"$id\"");
+		if($query){
+			$msgz = "Successfully updated your name";
+			$msgx = $msgz.$msg;
+			$response['status'] = 1;
+			$response['message'] = $msgx.".";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}else{
+			$response['status'] = 0;
+			$response['message'] = "Operation failed.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+	}
+	public function deleteAdmin($id){
+		$query = $this->query("DELETE FROM admins WHERE id=\"$id\"");
+		if($query){
+			$response['status'] = 1;
+			$response['message'] = "Account deleted successfully.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}else{
+			$response['status'] = 0;
+			$response['message'] = "Operation failed.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+	}
+	public function uniqueKey(){
+		return strtoupper(bin2hex(random_bytes(6)));
+	}
+	public function newProduct($title, $price, $discount, $details, $cat, $stock, $img, $feats, $feat, $specs, $spec){
+		$productCode = sha1($this->uniqueKey().time());
+		$date = date("d D M Y h:iA");
+		$slug = $this->fuckpbnl($title).$productCode;
+		for($i=0;$i<count($img['name']);$i++){
+			$imgFile = preg_replace('#[^a-z.0-9]#i', '', $img["name"][$i]);
+			//$fileExt = pathinfo($imgFile, PATHINFO_EXTENSION);
+			$ar = explode('.', $img['name'][$i]);
+			$fileExt = end($ar);
+			$filename = md5($img['name'][$i].date('Ymd').time().'-').".".$fileExt;
+			$target = "../media/".$filename;
+			if(move_uploaded_file($img['tmp_name'][$i], $target)){
+				$fem = $this->dlink()."/media/".$filename;
+				$this->query("INSERT INTO images(product_code, imgurl)VALUES(\"$productCode\", \"$fem\")");
+			}
+		}
+		for($i=0;$i<count($specs);$i++){
+			$vlu = $spec[$i];
+			$ttl = $specs[$i];
+			$this->query("INSERT INTO specs(product_code, title, value)VALUES(\"$productCode\",\"$ttl\",\"$vlu\")");
+		}
+		for($i=0;$i<count($feats);$i++){
+			$vlu = $feat[$i];
+			$ttl = $feats[$i];
+			$this->query("INSERT INTO feature(product_code, title, value)VALUES(\"$productCode\",\"$ttl\",\"$vlu\")");
+		}
+		$query = $this->query("INSERT INTO products(title, price, discount, category, product_code, details, stock, slug, uploaded)VALUES(\"$title\", \"$price\", \"$discount\", \"$cat\", \"$productCode\", \"$details\", \"$stock\", \"$slug\", \"$date\")");
+		if($query){
+			$response['status'] = 1;
+			$response['message'] = "Product added successfully";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}else{
+			$response['status'] = 0;
+			$response['message'] = "Operation failed, please try again later.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+	}
+	public function checkCat($slug){
+		$query = $this->query("SELECT * FROM categories WHERE slug=\"$slug\"");
+		return $this->num_rows($query);
+	}
+	public function newCategory($title, $parent, $img){
+		$imgFile = preg_replace('#[^a-z.0-9]#i', '', $img["name"][$i]);
+		//$fileExt = pathinfo($imgFile, PATHINFO_EXTENSION);
+		$ar = explode('.', $img['name']);
+		$fileExt = end($ar);
+		$filename = md5($img['name'].date('Ymd').time().'-').".".$fileExt;
+		$target = "../media/".$filename;
+		if($parent > 0){
+			$slug = $parent."-".$this->fuckpbnl($title);
+		}else{
+			$slug = $this->fuckpbnl($title);
+		}
+		if($this->checkCat($slug)>0){
+			$response['status'] = 0;
+			$response['message'] = "Category exists!";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+		if(move_uploaded_file($img['tmp_name'], $target)){
+			$fem = $this->dlink()."/media/".$filename;
+			$this->query("INSERT INTO images(product_code, imgurl)VALUES(\"$title\", \"$fem\")");
+		}else{
+			$response['status'] = 0;
+			$response['message'] = "Unable to add category, image upload failed";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+		$query = $this->query("INSERT INTO categories(title, img, parent, slug)VALUES(\"$title\", \"$fem\", \"$parent\", \"$slug\")");
+		if($query){
+			$response['status'] = 1;
+			$response['message'] = "Category created successfully";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}else{
+			$response['status'] = 0;
+			$response['message'] = "Operation failed";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+	}
+	public function getCategories(){
+		$query = $this->query("SELECT * FROM categories WHERE parent=0");
+		while($rows = $this->fetch_array($query)){
+			$data[] = $rows;
+		}
+		return $data;
+	}
+	public function getParentCategory($id){
+		$query = $this->query("SELECT * FROM categories WHERE parent=\"$id\"");
+		while($row = $this->fetch_array($query)){
+			$data[] = $row;
+		}
+		return $data;
+	}
+	public function products($page, $limit){
+		$page = (int) (!isset($_REQUEST["page"]) ? 1 : $_REQUEST["page"]);
+	    if($page == ""){
+	        $page = 1;
+	    }
+	    $startpoint = ($page * $limit) - $limit;
+		$query = $this->query("SELECT * FROM products ORDER BY id DESC LIMIT {$startpoint} , {$limit}");
+		while($row = $this->fetch_array($query)){
+	    	$data[] = $row;
+	    }
+	    return $data;
+	}
+	public function getProduct($productCode){
+		$query = $this->query("SELECT * FROM products WHERE product_code=\"$productCode\"");
+		return $this->fetch_array($query);
+	}
+	public function getImages($code){
+		$query = $this->query("SELECT * FROM images WHERE product_code=\"$code\"");
+		while($row = $this->fetch_array($query)){
+			$data[] = $row;
+		}
+		return $data;
+	}
+	public function getFeatures($code){
+		$query = $this->query("SELECT * FROM feature WHERE product_code=\"$code\"");
+		while($row = $this->fetch_array($query)){
+			$data[] = $row;
+		}
+		return $data;
+	}
+	public function getSpecs($code){
+		$query = $this->query("SELECT * FROM specs WHERE product_code=\"$code\"");
+		while($row = $this->fetch_array($query)){
+			$data[] = $row;
+		}
+		return $data;
+	}
+	public function inStock($page, $limit){
+		$page = (int) (!isset($_REQUEST["page"]) ? 1 : $_REQUEST["page"]);
+	    if($page == ""){
+	        $page = 1;
+	    }
+	    $startpoint = ($page * $limit) - $limit;
+		$query = $this->query("SELECT * FROM products WHERE status=0 ORDER BY id DESC LIMIT {$startpoint} , {$limit}");
+		while($row = $this->fetch_array($query)){
+	    	$data[] = $row;
+	    }
+	    return $data;
+	}
+	public function outStock($page, $limit){
+		$page = (int) (!isset($_REQUEST["page"]) ? 1 : $_REQUEST["page"]);
+	    if($page == ""){
+	        $page = 1;
+	    }
+	    $startpoint = ($page * $limit) - $limit;
+		$query = $this->query("SELECT * FROM products WHERE status=1 ORDER BY id DESC LIMIT {$startpoint} , {$limit}");
+		while($row = $this->fetch_array($query)){
+	    	$data[] = $row;
+	    }
+	    return $data;
+	}
+	public function deleteProduct($id){
+		$query = $this->query("DELETE FROM products WHERE product_code=\"$id\"");
+		if($query){
+			$this->query("DELETE FROM feature WHERE product_code=\"$id\"");
+			$this->query("DELETE FROM specs WHERE product_code=\"$id\"");
+			$this->deleteImage($id);
+			$response['status'] = 1;
+			$response['message'] = "Product deleted successfully";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}else{
+			$response['message'] = "Product deletion failed, please try again";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}
+	}
+	public function deleteImage($code){
+		$query = $this->query("SELECT * FROM images WHERE product_code=\"$code\"");
+		while($row = $this->fetch_array($query)){
+			$imgUrl = $row['imgurl'];
+			$epa = str_replace($this->dlink()."/", "", $imgUrl);
+			unlink("../".$epa);
+		}
+		$this->query("DELETE FROM images WHERE product_code=\"$code\"");
+	}
+	public function editProduct($title, $price, $discount, $details, $cat, $stock, $img, $feats, $feat, $specs, $spec, $deleteImg, $deleteft, $deletesp, $productCode){
+		$delImg = substr($deleteImg, 0, -1);
+		$delTft = substr($deleteft, 0, -1);
+		$delSp = substr($deletesp, 0, -1);
+		$imgAr = explode(',', $delImg);
+		$ftAr = explode(',', $delTft);
+		$spAr = explode(',', $delSp);
+		for($i=0;$i<count(array($img['name']));$i++){
+			$imgFile = preg_replace('#[^a-z.0-9]#i', '', $img["name"][$i]);
+			//$fileExt = pathinfo($imgFile, PATHINFO_EXTENSION);
+			$ar = explode('.', $img['name'][$i]);
+			$fileExt = end($ar);
+			$filename = md5($img['name'][$i].date('Ymd').time().'-').".".$fileExt;
+			$target = "../media/".$filename;
+			if(move_uploaded_file($img['tmp_name'][$i], $target)){
+				$fem = $this->dlink()."/media/".$filename;
+				$this->query("INSERT INTO images(product_code, imgurl)VALUES(\"$productCode\", \"$fem\")");
+			}
+		}
+		for($i=0;$i<count(array($specs));$i++){
+			$vlu = $spec[$i];
+			$ttl = $specs[$i];
+			if(!empty($ttl)){
+			$this->query("INSERT INTO specs(product_code, title, value)VALUES(\"$productCode\",\"$ttl\",\"$vlu\")");
+			}
+		}
+		for($i=0;$i<count(array($feats));$i++){
+			$vlu = $feat[$i];
+			$ttl = $feats[$i];
+			if(!empty($ttl)){
+			$this->query("INSERT INTO feature(product_code, title, value)VALUES(\"$productCode\",\"$ttl\",\"$vlu\")");
+			}
+		}
+		$query = $this->query("UPDATE products SET title=\"$title\", price=\"$price\", discount=\"$discount\", category=\"$cat\", details=\"$details\", stock=\"$stock\" WHERE product_code=\"$productCode\"");
+		if($query){
+			for($i=0;$i<count(array($imgAr));$i++){
+				$id = $imgAr[$i];
+				$qx = $this->query("SELECT * FROM images WHERE id=\"$id\"");
+				$rx = $this->fetch_array($qx);
+				$imgUrl = $rx['imgurl'];
+				$epa = str_replace($this->dlink()."/", "", $imgUrl);
+				$this->query("DELETE FROM images WHERE id=\"$id\"");
+				if(!empty($epa)){
+					unlink("../".$epa);
+				}
+			}
+			for($i=0;$i<count(array($ftAr));$i++){
+				$id = $ftAr[$i];
+				$this->query("DELETE FROM feature WHERE id=\"$id\"");
+			}
+			for($i=0;$i<count(array($spAr));$i++){
+				$id = $spAr[$i];
+				$this->query("DELETE FROM specs WHERE id=\"$id\"");
+			}
+			$response['status'] = 1;
+			$response['message'] = "Product updated successfully.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
+			exit;
+		}else{
+			$response['status'] = 0;
+			$response['message'] = "Operation failed, please try again later.";
+			header('Content-Type: application/json');
+			echo json_encode($response, true);
 			exit;
 		}
 	}
@@ -519,6 +900,10 @@ class MySQLiDatabase{
 		$past = time() - 100;
 		setcookie('username', 'gone', $past);
 		header("location: ../");
+	}
+	public function catHasChild($id){
+		$query = $this->query("SELECT * FROM categories WHERE parent=\"$id\"");
+		return $this->num_rows($query);
 	}
 }
 $db = new MySQLiDatabase();

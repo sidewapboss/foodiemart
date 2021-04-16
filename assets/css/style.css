@@ -1,0 +1,25 @@
+header{
+    width: 100%;
+    z-index: 1000;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    background-color: #013412;
+}
+header a.head{
+    color: #FFF;
+    text-decoration: none;
+}
+span.cartCount{
+    font-size: 14px;
+    font-weight: 900;
+    position: absolute;
+    border-radius: 60%;
+    height: 14px;
+    width: 8px;
+    color: #FFF;
+}
+.cart{
+    font-size: 25px;
+    color: #FFF;
+    padding: 5px;
+}

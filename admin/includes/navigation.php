@@ -44,12 +44,13 @@
                         <li class="<?php if($cur=="failed"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/failed"><span class="glyphicon glyphicon-edit"></span><span class="text">Failed</span></a></li>
                     </ul>
                 </li>
-                <li class="openable <?php if($cur=="settings"){?>active<?php }?>">
+                <li class="openable <?php if($cur=="settings" || $cur=="new-admin" || $cur=="admins"){?>active<?php }?>">
                     <a href="#">
                         <span class="isw-cancel"></span><span class="text">Account Settings</span>                    
                     </a>
                     <ul>
-                        <li class="<?php if($cur=="settings"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/users/settings"><span class="glyphicon glyphicon-edit"></span><span class="text">My Account</span></a></li>
+                        <li class="<?php if($cur=="admins"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/admins"><span class="glyphicon glyphicon-edit"></span><span class="text">Admins</span></a></li>
+                        <li class="<?php if($cur=="settings"){?>active<?php }?>"><a href="<?php echo $db->dlink();?>/admin/settings"><span class="glyphicon glyphicon-edit"></span><span class="text">My Account</span></a></li>
                         <li><a href="<?php echo $db->dlink();?>/admin/mint?action=logout"><span class="glyphicon glyphicon-warning-sign"></span><span class="text">Logout</span></a></li>
                     </ul>
                 </li>                       
